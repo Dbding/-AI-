@@ -61,18 +61,24 @@
             border-color: #22c55e; /* 綠色：無風險 */
         }
 
-        /* 智慧補問卡片樣式 */
-        .smart-script-card {
+        /* 智慧卡片樣式 */
+        .ai-card {
             background-color: #f8fafc;
             border: 1px solid #e2e8f0;
-            border-radius: 6px;
-            padding: 10px;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+            transition: all 0.2s;
+        }
+        .ai-card:hover {
+            border-color: var(--moe-secondary);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .highlight-prompt {
             background-color: #fefce8;
             border: 1px dashed #eab308;
-            padding: 4px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
         }
 
@@ -85,11 +91,15 @@
             100% { box-shadow: 0 0 0 15px rgba(13, 148, 136, 0); }
         }
 
+        /* 頁籤內容顯示控制 */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .tab-btn.active { border-bottom-color: var(--moe-secondary); color: var(--moe-secondary); }
+
         /* 滾動條美化 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -97,8 +107,7 @@
     <!-- 頂部導航欄 (模擬原系統) -->
     <header class="moe-gradient-header text-white px-6 py-3 flex justify-between items-center z-20 shadow-md">
         <div class="flex items-center space-x-4">
-            <div class="bg-white/90 p-1.5 rounded-sm">
-                <!-- 模擬 Logo -->
+            <div class="bg-white/90 p-1.5 rounded-sm shadow-inner">
                 <svg width="32" height="32" viewBox="0 0 100 100" fill="var(--moe-primary)">
                     <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" opacity="0.3"/>
                     <path d="M50 20 L80 35 L80 65 L50 80 L20 65 L20 35 Z" fill="var(--moe-secondary)"/>
@@ -114,7 +123,7 @@
                 <span class="font-medium"><i class="fa-solid fa-id-badge mr-2"></i>北區管理中心 - 林小明</span>
                 <span class="text-[10px] opacity-60">登錄時間：2026-11-20 09:45</span>
             </div>
-            <button class="bg-white/10 hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded transition duration-200">
+            <button class="bg-white/10 hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded transition duration-200 shadow-sm">
                 安全登出
             </button>
         </div>
@@ -143,19 +152,19 @@
                         <div class="grid grid-cols-2 gap-8">
                             <div class="space-y-1.5">
                                 <label class="text-sm font-bold text-slate-600">陳情人姓名 <span class="text-red-500">*</span></label>
-                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed" value="張○芬 (已由 AI 去識別化)" disabled>
+                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed shadow-inner" value="張○芬 (已由 AI 去識別化)" disabled>
                             </div>
                             <div class="space-y-1.5">
                                 <label class="text-sm font-bold text-slate-600">聯絡電話 <span class="text-red-500">*</span></label>
-                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed" value="0912-***-456" disabled>
+                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed shadow-inner" value="0912-***-456" disabled>
                             </div>
                         </div>
 
                         <div class="space-y-1.5">
                             <label class="text-sm font-bold text-slate-600">發生地點 <span class="text-red-500">*</span></label>
                             <div class="flex">
-                                <input type="text" class="flex-1 border border-slate-300 rounded-l-md p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition" placeholder="請輸入詳細地址或選擇地圖定位">
-                                <button class="bg-slate-100 border border-l-0 border-slate-300 px-5 rounded-r-md hover:bg-slate-200 transition text-slate-600">
+                                <input type="text" class="flex-1 border border-slate-300 rounded-l-md p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition shadow-sm" placeholder="請輸入詳細地址或選擇地圖定位">
+                                <button class="bg-slate-100 border border-l-0 border-slate-300 px-5 rounded-r-md hover:bg-slate-200 transition text-slate-600 shadow-sm">
                                     <i class="fa-solid fa-map-location-dot mr-2"></i>地圖
                                 </button>
                             </div>
@@ -163,13 +172,13 @@
 
                         <div class="space-y-1.5">
                             <label class="text-sm font-bold text-slate-600">陳情內容敘述 <span class="text-red-500">*</span></label>
-                            <textarea rows="6" class="w-full border border-slate-300 rounded-md p-3.5 focus:ring-2 focus:ring-teal-500 outline-none transition leading-relaxed text-slate-700">最近每天晚上八點過後，這附近的餐廳排出來的煙味真的很重，味道很刺鼻，讓我們都沒辦法開窗戶，已經發生好幾次了都沒有改善，請幫忙處理。</textarea>
+                            <textarea rows="6" class="w-full border border-slate-300 rounded-md p-3.5 focus:ring-2 focus:ring-teal-500 outline-none transition leading-relaxed text-slate-700 shadow-sm">最近每天晚上八點過後，這附近的餐廳排出來的煙味真的很重，味道很刺鼻，讓我們都沒辦法開窗戶，已經發生好幾次了都沒有改善，請幫忙處理。</textarea>
                         </div>
 
                         <div class="grid grid-cols-2 gap-8">
                             <div class="space-y-1.5">
                                 <label class="text-sm font-bold text-slate-600">污染類別 (AI 自動建議)</label>
-                                <select class="w-full border border-orange-200 bg-orange-50 rounded-md p-2.5 text-slate-700 outline-none">
+                                <select class="w-full border border-orange-200 bg-orange-50 rounded-md p-2.5 text-slate-700 outline-none shadow-sm">
                                     <option>異味污染物</option>
                                     <option>空氣污染</option>
                                     <option>噪音</option>
@@ -204,11 +213,11 @@
         </main>
 
         <!-- AI 智慧助手外掛側欄 -->
-        <aside class="ai-plugin-sidebar">
+        <aside class="ai-plugin-sidebar shadow-2xl">
             <!-- 側欄標題 -->
-            <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
+            <div class="p-4 bg-slate-800 text-white flex justify-between items-center shadow-lg">
                 <div class="flex items-center">
-                    <div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center mr-3 ai-breathing">
+                    <div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center mr-3 ai-breathing shadow-inner">
                         <i class="fa-solid fa-robot text-sm"></i>
                     </div>
                     <span class="font-bold tracking-wide">AI 智慧受理助手</span>
@@ -217,85 +226,155 @@
             </div>
 
             <!-- 頁籤切換 -->
-            <div class="flex border-b text-sm">
-                <button class="flex-1 py-3 font-bold border-b-2 border-teal-600 text-teal-700">受理輔助</button>
-                <button class="flex-1 py-3 font-bold text-slate-400 hover:bg-slate-50">知識 RAG</button>
-                <button class="flex-1 py-3 font-bold text-slate-400 hover:bg-slate-50">數據分析</button>
+            <div class="flex border-b text-sm bg-slate-50/50">
+                <button onclick="switchTab('assist')" id="btn-assist" class="tab-btn flex-1 py-3 font-bold border-b-2 border-transparent text-slate-400 hover:bg-white transition active">受理輔助</button>
+                <button onclick="switchTab('rag')" id="btn-rag" class="tab-btn flex-1 py-3 font-bold border-b-2 border-transparent text-slate-400 hover:bg-white transition">知識 RAG</button>
+                <button onclick="switchTab('data')" id="btn-data" class="tab-btn flex-1 py-3 font-bold border-b-2 border-transparent text-slate-400 hover:bg-white transition">數據分析</button>
             </div>
 
             <!-- AI 核心內容區 -->
-            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+            <div class="flex-1 overflow-y-auto p-5">
                 
-                <!-- 1. 重複陳情警告 (向量比對技術) -->
-                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 shadow-sm">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-amber-800 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>偵測到疑似重複陳情</span>
-                        <span class="bg-amber-200 text-amber-900 text-[10px] px-1.5 py-0.5 rounded">相似度 94%</span>
+                <!-- 分頁 1: 受理輔助 -->
+                <div id="tab-assist" class="tab-content active space-y-6">
+                    <!-- 重複陳情警告 -->
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 shadow-sm">
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-amber-800 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>偵測到疑似重複陳情</span>
+                            <span class="bg-amber-200 text-amber-900 text-[10px] px-1.5 py-0.5 rounded shadow-sm">相似度 94%</span>
+                        </div>
+                        <p class="text-[11px] text-amber-700 leading-relaxed">此地址於 2 小時內已有 2 筆關於「餐飲油煙」的報案，建議進行【併案處理】。</p>
+                        <div class="mt-2 flex space-x-2">
+                            <button class="bg-amber-600 text-white text-[10px] px-3 py-1 rounded hover:bg-amber-700 shadow-sm">查看關聯案</button>
+                            <button class="bg-white border border-amber-300 text-amber-700 text-[10px] px-3 py-1 rounded shadow-sm">忽略提示</button>
+                        </div>
                     </div>
-                    <p class="text-[11px] text-amber-700 leading-relaxed">此地址於 2 小時內已有 2 筆關於「餐飲油煙」的報案，建議進行【併案處理】以節省派案資源。</p>
-                    <div class="mt-2 flex space-x-2">
-                        <button class="bg-amber-600 text-white text-[10px] px-3 py-1 rounded hover:bg-amber-700">查看關聯案</button>
-                        <button class="bg-white border border-amber-300 text-amber-700 text-[10px] px-3 py-1 rounded">忽略提示</button>
-                    </div>
-                </div>
 
-                <!-- 2. AI 色階分級管理 (CCS 風格) -->
-                <div class="space-y-3">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">案件處理優先權評估</h4>
-                    <div class="priority-level priority-medium">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold">優先級：中風險 (橙色)</span>
-                            <span class="text-xs font-mono">SCORE: 72</span>
-                        </div>
-                        <div class="w-full bg-white/60 h-2 rounded-full overflow-hidden">
-                            <div class="bg-orange-500 h-full w-[72%] shadow-[0_0_8px_rgba(249,115,22,0.5)]"></div>
-                        </div>
-                        <p class="text-[10px] mt-2 opacity-80 leading-relaxed">判斷基準：感官型污染、發生頻繁、鄰近住宅區、夜間好發。建議派發至「環境管理署北區中心」。</p>
-                    </div>
-                </div>
-
-                <!-- 3. 智慧補問腳本 (NLP 意圖分析) -->
-                <div class="space-y-3">
-                    <div class="flex justify-between items-center">
-                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">智慧引導補問建議</h4>
-                        <span class="bg-teal-50 text-teal-700 text-[9px] px-2 py-0.5 rounded border border-teal-100">SOP 自動匹配</span>
-                    </div>
-                    <div class="smart-script-card space-y-3">
-                        <div class="flex items-start space-x-3">
-                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
-                            <p class="text-xs text-slate-600">Q: 是否能具體描述味道？(例如：<span class="highlight-prompt">燒焦味</span>、<span class="highlight-prompt">酸臭味</span>、<span class="highlight-prompt">油漆味</span>)</p>
-                        </div>
-                        <div class="flex items-start space-x-3 bg-teal-50/50 p-2 rounded">
-                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
-                            <p class="text-xs text-slate-800 font-medium italic">Q: 是否有觀察到明顯的黑煙或煙囪排放？</p>
-                        </div>
-                        <div class="flex items-start space-x-3">
-                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
-                            <p class="text-xs text-slate-600 line-through">Q: 發生的大約時間點？(民眾已敘述)</p>
-                        </div>
-                        <button class="w-full py-2 bg-slate-700 text-white text-xs rounded hover:bg-slate-800 transition font-bold shadow-sm">
-                            <i class="fa-solid fa-i-cursor mr-2"></i> 一鍵帶入補問清單
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 4. 法規知識 RAG 摘要 -->
-                <div class="space-y-3">
-                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">相關法規與回覆範本 (RAG)</h4>
-                    <div class="space-y-2.5">
-                        <div class="p-2.5 border border-slate-200 rounded-md hover:border-teal-400 cursor-pointer transition group">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[10px] font-bold text-teal-600 group-hover:text-teal-700">《空污法》第 32 條第 1 項</span>
-                                <i class="fa-solid fa-arrow-up-right-from-square text-[8px] text-slate-300"></i>
+                    <!-- AI 色階分級 -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">案件處理優先權評估</h4>
+                        <div class="priority-level priority-medium shadow-sm">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="font-bold">優先級：中風險 (橙色)</span>
+                                <span class="text-xs font-mono">SCORE: 72</span>
                             </div>
-                            <p class="text-[11px] text-slate-500 leading-snug line-clamp-2">從事烹飪甚至散發油煙或惡臭者，應設置防制設施並維持正常操作，不得有散布油煙...</p>
-                        </div>
-                        <div class="p-2.5 border border-slate-200 rounded-md hover:border-teal-400 cursor-pointer transition group border-l-4 border-l-teal-600 bg-slate-50">
-                            <div class="flex justify-between items-center mb-1">
-                                <span class="text-[10px] font-bold text-slate-700">推薦回覆文字草稿 (親民版)</span>
-                                <span class="text-[9px] bg-white border px-1 rounded">一鍵複製</span>
+                            <div class="w-full bg-white/60 h-2 rounded-full overflow-hidden shadow-inner">
+                                <div class="bg-orange-500 h-full w-[72%] shadow-[0_0_8px_rgba(249,115,22,0.4)]"></div>
                             </div>
-                            <p class="text-[11px] text-slate-600 italic leading-snug">「感謝您的反映，本局已錄案辦理，將儘速派員前往該餐廳進行油煙防制設備檢查及氣味偵測...」</p>
+                            <p class="text-[10px] mt-2 opacity-80 leading-relaxed">判斷基準：感官型污染、鄰近住宅區、夜間好發。建議派發至「北區中心」。</p>
+                        </div>
+                    </div>
+
+                    <!-- 智慧補問腳本 -->
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">智慧引導補問建議</h4>
+                        </div>
+                        <div class="ai-card space-y-3 shadow-inner">
+                            <div class="flex items-start space-x-3">
+                                <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
+                                <p class="text-xs text-slate-600">Q: 是否能描述味道？(例：<span class="highlight-prompt">燒焦味</span>、<span class="highlight-prompt">酸臭味</span>)</p>
+                            </div>
+                            <div class="flex items-start space-x-3 bg-teal-50/50 p-2 rounded">
+                                <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
+                                <p class="text-xs text-slate-800 font-medium italic">Q: 是否觀察到明顯黑煙或煙囪排放？</p>
+                            </div>
+                            <button class="w-full py-2 bg-slate-700 text-white text-xs rounded hover:bg-slate-800 transition font-bold shadow-md">
+                                <i class="fa-solid fa-i-cursor mr-2"></i> 一鍵帶入補問清單
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁 2: 知識 RAG (更新) -->
+                <div id="tab-rag" class="tab-content space-y-6">
+                    <!-- 搜尋框 -->
+                    <div class="relative">
+                        <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md py-2 px-4 pr-10 text-xs focus:ring-2 focus:ring-teal-500 outline-none" placeholder="搜尋法規、SOP 或歷史判例...">
+                        <i class="fa-solid fa-search absolute right-3 top-2.5 text-slate-300"></i>
+                    </div>
+
+                    <!-- 智慧推薦法規 -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">AI 推薦關聯法規</h4>
+                        <div class="ai-card p-0 overflow-hidden shadow-sm">
+                            <div class="p-3 hover:bg-slate-50 transition border-b border-slate-100">
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="font-bold text-teal-700">《空污法》第 32 條第 1 項</span>
+                                    <span class="text-teal-600 font-bold">精準匹配</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">從事烹飪甚至散發油煙或惡臭者，不得有散布油煙或惡臭之行為。</p>
+                            </div>
+                            <div class="p-3 hover:bg-slate-50 transition">
+                                <div class="flex justify-between text-[10px] mb-1">
+                                    <span class="font-bold text-slate-700">環境保護機關處理公害作業程序</span>
+                                    <span class="text-slate-400 italic">作業導引</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 leading-snug">受理後應於 24 小時內派員現場查核，並詳實記錄氣象條件。</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI 歷史判例摘要 -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">相關裁罰判例摘要</h4>
+                        <div class="bg-slate-800 text-slate-200 p-4 rounded-lg shadow-inner">
+                            <div class="flex items-center mb-2 space-x-2 text-teal-400 text-xs">
+                                <i class="fa-solid fa-microchip"></i>
+                                <span class="font-bold">AI 智慧摘要：113 年某燒烤店案</span>
+                            </div>
+                            <p class="text-[11px] leading-relaxed opacity-90">該案因「油煙收集不完全」遭罰 10 萬元。行政法院判決重點：即便有裝設設備，若「排放口產生明顯視覺油煙」即構成違規要件。</p>
+                            <div class="mt-3 text-[10px] text-teal-500 underline cursor-pointer">檢視完整法律諮詢筆記</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分頁 3: 數據分析 (更新) -->
+                <div id="tab-data" class="tab-content space-y-6">
+                    <!-- 熱區概況 -->
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-red-50 border border-red-100 p-3 rounded-lg text-center shadow-sm">
+                            <div class="text-[10px] text-red-400 font-bold mb-1">本月熱區等級</div>
+                            <div class="text-2xl font-black text-red-600">LV. 4</div>
+                            <div class="text-[9px] text-red-400">高度頻發區域</div>
+                        </div>
+                        <div class="bg-teal-50 border border-teal-100 p-3 rounded-lg text-center shadow-sm">
+                            <div class="text-[10px] text-teal-400 font-bold mb-1">處理達成率</div>
+                            <div class="text-2xl font-black text-teal-600">92%</div>
+                            <div class="text-[9px] text-teal-400">平均 4.2 小時回覆</div>
+                        </div>
+                    </div>
+
+                    <!-- 簡易趨勢預測 -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">案件趨勢預測 (AI 模型)</h4>
+                        <div class="ai-card bg-white shadow-sm p-4">
+                            <div class="flex items-end space-x-1 h-20 mb-2">
+                                <div class="bg-slate-200 w-full h-[40%] rounded-t-sm"></div>
+                                <div class="bg-slate-200 w-full h-[60%] rounded-t-sm"></div>
+                                <div class="bg-slate-200 w-full h-[55%] rounded-t-sm"></div>
+                                <div class="bg-teal-400 w-full h-[85%] rounded-t-sm shadow-[0_0_8px_rgba(45,212,191,0.5)]"></div>
+                                <div class="bg-teal-200 w-full h-[70%] rounded-t-sm border-2 border-dashed border-teal-400 opacity-60"></div>
+                            </div>
+                            <div class="flex justify-between text-[9px] text-slate-400">
+                                <span>週二</span><span>週三</span><span>週四</span><span class="text-teal-600 font-bold">今日</span><span>預測明日</span>
+                            </div>
+                            <p class="text-[10px] mt-4 text-slate-500"><i class="fa-solid fa-cloud-sun mr-1"></i> AI 提示：受明日氣壓變低影響，異味擴散不佳，預計陳情件數將增加 20%。</p>
+                        </div>
+                    </div>
+
+                    <!-- 關聯對象歷史分析 -->
+                    <div class="space-y-3">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">鄰近業者歷史行為</h4>
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center text-[11px] p-2 bg-slate-50 rounded border border-slate-100">
+                                <span class="text-slate-700">附近 A 燒肉店</span>
+                                <span class="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-[9px]">曾受裁罰 (3次)</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[11px] p-2 bg-slate-50 rounded border border-slate-100 opacity-60">
+                                <span class="text-slate-700">附近 B 乾洗店</span>
+                                <span class="text-slate-400">查無裁罰紀錄</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -305,14 +384,14 @@
             <!-- AI 助手對話輸入框 -->
             <div class="p-4 bg-white border-t border-slate-100 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
                 <div class="relative">
-                    <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-full py-2.5 px-5 pr-12 text-xs focus:ring-2 focus:ring-teal-500 outline-none transition" placeholder="輸入指令 (例如：找出該區域近三個月處分統計)">
+                    <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-full py-2.5 px-5 pr-12 text-xs focus:ring-2 focus:ring-teal-500 outline-none transition shadow-inner" placeholder="輸入指令 (例如：找出該區域近三個月處分統計)">
                     <button class="absolute right-3 top-2.5 text-teal-600 hover:text-teal-800 transition">
                         <i class="fa-solid fa-paper-plane"></i>
                     </button>
                 </div>
                 <div class="mt-2.5 flex justify-center items-center">
                     <div class="h-[1px] w-10 bg-slate-200"></div>
-                    <span class="mx-3 text-[10px] text-slate-400 font-medium">Gemini 2.5 Flash Engine Enabled</span>
+                    <span class="mx-3 text-[10px] text-slate-400 font-medium tracking-widest">Gemini 2.5 Flash Engine </span>
                     <div class="h-[1px] w-10 bg-slate-200"></div>
                 </div>
             </div>
@@ -328,6 +407,23 @@
     <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45 pointer-events-none opacity-[0.03] text-slate-900 text-9xl font-black whitespace-nowrap">
         MOE INTERNAL ONLY
     </div>
+
+    <!-- 簡易切換腳本 -->
+    <script>
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            // Deactivate all buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // Show target tab and activate button
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+    </script>
 
 </body>
 </html>
