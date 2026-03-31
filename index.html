@@ -1,369 +1,333 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Bot, 
-  ChevronRight, 
-  ChevronLeft, 
-  AlertTriangle, 
-  CheckCircle2, 
-  Search, 
-  FileText, 
-  Clock, 
-  ShieldCheck,
-  MessageSquare,
-  BarChart3,
-  Sparkles,
-  Info
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>環境部 - AI 智慧陳情受理服務系統</title>
+    <!-- 使用 Tailwind CSS 作為基礎框架 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS 樣式定義區塊 -->
+    <style>
+        :root {
+            --moe-primary: #005581;      /* 環境部藍 */
+            --moe-secondary: #007c89;    /* 環境部綠 */
+            --moe-bg: #e5eef3;           /* 頁面背景色 */
+            --ai-accent: #0d9488;        /* AI 助手主題色 */
+        }
 
-const App = () => {
-  const [isOpen, setIsOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState('receipt'); // receipt, search, analysis
-  const [analysisLoading, setAnalysisLoading] = useState(false);
-  const [caseType, setCaseType] = useState('未分類');
-  const [riskLevel, setRiskLevel] = useState(0); // 0-100
-  const [draftMode, setDraftMode] = useState('citizen'); // citizen, internal
+        body {
+            font-family: "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+            background-color: var(--moe-bg);
+        }
 
-  // 模擬分析功能
-  const runAIAnalysis = () => {
-    setAnalysisLoading(true);
-    setTimeout(() => {
-      setAnalysisLoading(false);
-      setCaseType('感官型公害 - 異味污染物');
-      setRiskLevel(85);
-    }, 1500);
-  };
+        /* 模擬環境部官網的漸層導航欄 */
+        .moe-gradient-header {
+            background: linear-gradient(135deg, var(--moe-primary) 0%, var(--moe-secondary) 100%);
+        }
 
-  const getRiskColor = (level) => {
-    if (level >= 80) return 'bg-red-500';
-    if (level >= 50) return 'bg-orange-500';
-    if (level >= 20) return 'bg-yellow-500';
-    return 'bg-green-500';
-  };
+        /* AI 外掛側欄樣式 */
+        .ai-plugin-sidebar {
+            width: 380px;
+            background: #ffffff;
+            border-left: 1px solid #dee2e6;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+        }
 
-  const getRiskText = (level) => {
-    if (level >= 80) return '高風險 / 緊急';
-    if (level >= 50) return '中風險 / 追蹤';
-    if (level >= 20) return '低風險 / 常規';
-    return '無風險';
-  };
+        /* AI 色階分級標籤 (CCS 色階定義) */
+        .priority-level {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 12px;
+            border-left: 5px solid transparent;
+        }
+        .priority-high { 
+            background-color: #fff1f2; 
+            color: #be123c; 
+            border-color: #e11d48; /* 紅色：緊急 */
+        }
+        .priority-medium { 
+            background-color: #fff7ed; 
+            color: #9a3412; 
+            border-color: #f97316; /* 橙色：一般 */
+        }
+        .priority-low { 
+            background-color: #f0fdf4; 
+            color: #166534; 
+            border-color: #22c55e; /* 綠色：無風險 */
+        }
 
-  return (
-    <div className="flex h-screen w-full bg-gray-100 overflow-hidden font-sans">
-      {/* 背景：模擬環境部現有受理系統介面 */}
-      <div className="flex-1 flex flex-col">
-        <header className="h-16 bg-[#005599] text-white flex items-center px-6 justify-between shadow-md">
-          <div className="flex items-center gap-3">
-            <div className="bg-white p-1 rounded">
-              <div className="w-8 h-8 bg-[#005599] flex items-center justify-center font-bold text-xs">環境部</div>
+        /* 智慧補問卡片樣式 */
+        .smart-script-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .highlight-prompt {
+            background-color: #fefce8;
+            border: 1px dashed #eab308;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        /* AI 呼吸燈效果 */
+        .ai-breathing {
+            animation: breathing 2.5s ease-out infinite;
+        }
+        @keyframes breathing {
+            0% { box-shadow: 0 0 0 0px rgba(13, 148, 136, 0.4); }
+            100% { box-shadow: 0 0 0 15px rgba(13, 148, 136, 0); }
+        }
+
+        /* 滾動條美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- 頂部導航欄 (模擬原系統) -->
+    <header class="moe-gradient-header text-white px-6 py-3 flex justify-between items-center z-20 shadow-md">
+        <div class="flex items-center space-x-4">
+            <div class="bg-white/90 p-1.5 rounded-sm">
+                <!-- 模擬 Logo -->
+                <svg width="32" height="32" viewBox="0 0 100 100" fill="var(--moe-primary)">
+                    <path d="M50 10 L90 30 L90 70 L50 90 L10 70 L10 30 Z" opacity="0.3"/>
+                    <path d="M50 20 L80 35 L80 65 L50 80 L20 65 L20 35 Z" fill="var(--moe-secondary)"/>
+                </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-wider">公害污染陳情網路受理系統</h1>
-              <p className="text-[10px] opacity-80">Environmental Management Administration, Ministry of Environment</p>
+                <h1 class="text-xl font-bold tracking-tight">公害污染陳情案件管理系統</h1>
+                <p class="text-[10px] opacity-70 tracking-widest uppercase">Environmental Management Administration</p>
             </div>
-          </div>
-          <div className="flex gap-4 text-sm items-center">
-            <span className="bg-[#004488] px-3 py-1 rounded-full">管理員：林書豪</span>
-            <Clock size={16} />
-            <span>2026-03-31 14:30</span>
-          </div>
-        </header>
-
-        <main className="p-8 flex-1 bg-[#f4f7f9] overflow-auto">
-          <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-sm border border-gray-200 p-8">
-            <div className="flex justify-between items-center mb-6 border-b pb-4">
-              <h2 className="text-xl font-bold text-[#333] flex items-center gap-2">
-                <FileText className="text-[#005599]" /> 案件受理登記表
-              </h2>
-              <span className="text-sm text-gray-500">案件編號：EMA1150331001</span>
+        </div>
+        <div class="flex items-center space-x-5 text-sm">
+            <div class="flex flex-col items-end">
+                <span class="font-medium"><i class="fa-solid fa-id-badge mr-2"></i>北區管理中心 - 林小明</span>
+                <span class="text-[10px] opacity-60">登錄時間：2024-11-20 09:45</span>
             </div>
+            <button class="bg-white/10 hover:bg-white/20 border border-white/30 px-4 py-1.5 rounded transition duration-200">
+                安全登出
+            </button>
+        </div>
+    </header>
 
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">陳情人姓名</label>
-                  <input type="text" className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#005599] outline-none" defaultValue="張小姐" />
+    <div class="flex-1 flex overflow-hidden">
+        
+        <!-- 主表單區域 (原系統畫面) -->
+        <main class="flex-1 overflow-y-auto p-10 bg-[#f4f7f9]">
+            <div class="max-w-4xl mx-auto">
+                <!-- 麵包屑導航 -->
+                <div class="flex items-center text-xs text-slate-400 mb-6">
+                    <i class="fa-solid fa-home mr-2"></i> 首頁 
+                    <i class="fa-solid fa-chevron-right mx-2 text-[8px]"></i> 案件受理 
+                    <i class="fa-solid fa-chevron-right mx-2 text-[8px]"></i> <span class="text-slate-600 font-bold">新案登記</span>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">聯絡電話</label>
-                  <input type="text" className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#005599] outline-none" defaultValue="0912-***-456" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">發生地點</label>
-                  <input type="text" className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#005599] outline-none" defaultValue="臺中市西屯區逢甲路100號附近" />
-                </div>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">陳情內容敘述</label>
-                  <textarea 
-                    className="w-full p-2 border border-gray-300 rounded h-32 focus:ring-2 focus:ring-[#005599] outline-none text-sm leading-relaxed"
-                    placeholder="請輸入民眾陳情內容..."
-                    defaultValue="最近每天晚上八點過後，這附近的餐廳都會排出一股很刺鼻的油煙味，味道真的很臭，讓我們附近住戶連窗戶都不能開，已經反應好幾次了都沒有改善，請趕快派人來稽查。"
-                  ></textarea>
-                </div>
-                <button 
-                  onClick={runAIAnalysis}
-                  className="w-full bg-[#f39800] hover:bg-[#e08b00] text-white font-bold py-3 rounded shadow transition-all flex items-center justify-center gap-2"
-                >
-                  <Sparkles size={18} /> 送出案件 (觸發AI助手分析)
-                </button>
-              </div>
-            </div>
-          </div>
 
-          <div className="mt-8 grid grid-cols-3 gap-6 max-w-4xl mx-auto opacity-40 pointer-events-none">
-             <div className="bg-white p-6 rounded shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-2 font-bold">問</div>
-                <p className="font-bold">我要報案</p>
-             </div>
-             <div className="bg-white p-6 rounded shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-2 font-bold">查</div>
-                <p className="font-bold">案件查詢</p>
-             </div>
-             <div className="bg-white p-6 rounded shadow-sm border border-gray-100 flex flex-col items-center">
-                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-600 mb-2 font-bold">規</div>
-                <p className="font-bold">業務說明</p>
-             </div>
-          </div>
-        </main>
-      </div>
-
-      {/* AI智慧助手外掛 (側欄浮層) */}
-      <div 
-        className={`fixed right-0 top-0 h-full bg-white shadow-2xl border-l border-gray-200 transition-all duration-300 flex flex-col z-50 ${isOpen ? 'w-[400px]' : 'w-0'}`}
-      >
-        {/* 控制按鈕 */}
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="absolute -left-10 top-1/2 transform -translate-y-1/2 bg-[#005599] text-white p-2 rounded-l-lg shadow-xl"
-        >
-          {isOpen ? <ChevronRight /> : <div className="flex flex-col items-center gap-1 py-2"><Bot size={20} /><span className="text-[10px] [writing-mode:vertical-lr]">AI助手</span></div>}
-        </button>
-
-        {isOpen && (
-          <>
-            {/* 助手頭部 */}
-            <div className="p-4 bg-[#005599] text-white flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="bg-white rounded-full p-1">
-                  <Bot className="text-[#005599]" size={20} />
-                </div>
-                <span className="font-bold tracking-wide">AI 智慧受理助手 V1.0</span>
-              </div>
-              <ShieldCheck size={18} className="opacity-80" />
-            </div>
-
-            {/* 標籤導覽 */}
-            <div className="flex border-b border-gray-200 bg-gray-50">
-              <button 
-                onClick={() => setActiveTab('receipt')}
-                className={`flex-1 py-3 text-sm font-bold flex flex-col items-center gap-1 transition-colors ${activeTab === 'receipt' ? 'bg-white text-[#005599] border-b-2 border-[#005599]' : 'text-gray-500 hover:bg-gray-100'}`}
-              >
-                <Sparkles size={16} /> 智慧受理
-              </button>
-              <button 
-                onClick={() => setActiveTab('search')}
-                className={`flex-1 py-3 text-sm font-bold flex flex-col items-center gap-1 transition-colors ${activeTab === 'search' ? 'bg-white text-[#005599] border-b-2 border-[#005599]' : 'text-gray-500 hover:bg-gray-100'}`}
-              >
-                <Search size={16} /> RAG 智搜
-              </button>
-              <button 
-                onClick={() => setActiveTab('analysis')}
-                className={`flex-1 py-3 text-sm font-bold flex flex-col items-center gap-1 transition-colors ${activeTab === 'analysis' ? 'bg-white text-[#005599] border-b-2 border-[#005599]' : 'text-gray-500 hover:bg-gray-100'}`}
-              >
-                <BarChart3 size={16} /> 數據預警
-              </button>
-            </div>
-
-            {/* 內容區 */}
-            <div className="flex-1 overflow-y-auto bg-white">
-              {activeTab === 'receipt' && (
-                <div className="p-5 space-y-6">
-                  {/* AI 分析狀態 */}
-                  {analysisLoading ? (
-                    <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                      <div className="w-10 h-10 border-4 border-[#005599] border-t-transparent rounded-full animate-spin"></div>
-                      <p className="text-gray-500 text-sm animate-pulse">正在理解陳情脈絡並去識別化...</p>
+                <!-- 陳情表單卡片 -->
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-slate-50 px-8 py-4 border-b border-slate-100 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-slate-700">案件受理登記表</h2>
+                        <span class="text-xs bg-slate-200 text-slate-600 px-2 py-1 rounded">Draft: #20241120-001</span>
                     </div>
-                  ) : (
-                    <>
-                      {/* 重複陳情提醒 */}
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3">
-                        <AlertTriangle className="text-blue-600 flex-shrink-0 mt-1" size={18} />
-                        <div>
-                          <p className="text-sm font-bold text-blue-800">偵測到重複陳情相似度 92%</p>
-                          <p className="text-xs text-blue-600 mt-1 leading-relaxed">
-                            系統比對到 500 公尺內於 2 小時前有 3 筆相同「餐飲油煙」報案。建議您可以併案處理以節省稽查人力。
-                          </p>
-                          <button className="mt-2 text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">查看關聯案件</button>
-                        </div>
-                      </div>
-
-                      {/* AI 分級與分類 */}
-                      <div className="space-y-4 border-b pb-6">
-                        <div className="flex justify-between items-end">
-                          <p className="text-sm font-bold text-gray-700">AI 色階分級建議</p>
-                          <span className={`text-[10px] font-bold text-white px-2 py-0.5 rounded-full ${getRiskColor(riskLevel)}`}>
-                            {getRiskText(riskLevel)}
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden flex">
-                          <div className={`h-full transition-all duration-1000 ${getRiskColor(riskLevel)}`} style={{ width: `${riskLevel}%` }}></div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                            <p className="text-[10px] text-gray-500 uppercase">智慧分類</p>
-                            <p className="text-xs font-bold text-[#333] mt-0.5">{caseType}</p>
-                          </div>
-                          <div className="bg-gray-50 p-2 rounded border border-gray-100">
-                            <p className="text-[10px] text-gray-500 uppercase">預估情熱度</p>
-                            <p className="text-xs font-bold text-[#333] mt-0.5">高 (近期區域焦點)</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 智慧引導補問 */}
-                      <div className="space-y-3">
-                        <p className="text-sm font-bold text-gray-700 flex items-center gap-1">
-                           <Sparkles size={14} className="text-[#f39800]" /> 智慧引導補問 (異味情境)
-                        </p>
-                        <div className="space-y-2">
-                          {[
-                            { q: "味道類型？", a: "如：焦味、酸臭味、油煙味" },
-                            { q: "發生頻率？", a: "如：持續、間歇、特定時段" },
-                            { q: "風向參考？", a: "依附近氣象站顯示為偏北風" }
-                          ].map((item, i) => (
-                            <div key={i} className="group cursor-pointer hover:bg-gray-50 border border-dashed border-gray-300 p-2 rounded transition-colors">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-[#005599]">Q: {item.q}</span>
-                                <ChevronRight size={14} className="text-gray-300 group-hover:text-[#005599]" />
-                              </div>
-                              <p className="text-[10px] text-gray-500 mt-1">{item.a}</p>
+                    
+                    <div class="p-8 space-y-6">
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-bold text-slate-600">陳情人姓名 <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed" value="張○芬 (已由 AI 去識別化)" disabled>
                             </div>
-                          ))}
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-bold text-slate-600">聯絡電話 <span class="text-red-500">*</span></label>
+                                <input type="text" class="w-full bg-slate-50 border border-slate-200 rounded-md p-2.5 text-slate-500 cursor-not-allowed" value="0912-***-456" disabled>
+                            </div>
                         </div>
-                      </div>
 
-                      {/* 自動生成草稿 */}
-                      <div className="bg-gray-50 rounded-lg border border-gray-200 overflow-hidden">
-                        <div className="flex border-b border-gray-200">
-                           <button 
-                             onClick={() => setDraftMode('citizen')}
-                             className={`flex-1 py-2 text-[10px] font-bold ${draftMode === 'citizen' ? 'bg-white text-[#005599]' : 'text-gray-400 bg-gray-50'}`}
-                           >
-                             親民回覆版 (民眾)
-                           </button>
-                           <button 
-                             onClick={() => setDraftMode('internal')}
-                             className={`flex-1 py-2 text-[10px] font-bold ${draftMode === 'internal' ? 'bg-white text-[#005599]' : 'text-gray-400 bg-gray-50'}`}
-                           >
-                             內部簽辦版 (公務)
-                           </button>
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-bold text-slate-600">發生地點 <span class="text-red-500">*</span></label>
+                            <div class="flex">
+                                <input type="text" class="flex-1 border border-slate-300 rounded-l-md p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition" placeholder="請輸入詳細地址或選擇地圖定位">
+                                <button class="bg-slate-100 border border-l-0 border-slate-300 px-5 rounded-r-md hover:bg-slate-200 transition text-slate-600">
+                                    <i class="fa-solid fa-map-location-dot mr-2"></i>地圖
+                                </button>
+                            </div>
                         </div>
-                        <div className="p-3">
-                          <p className="text-xs text-gray-600 leading-relaxed italic">
-                            {draftMode === 'citizen' 
-                              ? "「親愛的市民您好，關於您反映的異味問題，本署已運用AI科技即時定位污染熱點，並已錄案處理中，隨後將派員前往查處...」"
-                              : "「簽：本案經由AI語意分析判定為異味公害高風險案件。經查該區域近日內有同類型陳情案件，建議列入專案稽查重點，依空氣污染防制法辦理。」"}
-                          </p>
-                          <button className="w-full mt-3 py-2 bg-[#005599] text-white text-xs rounded font-bold hover:bg-[#004488]">一鍵套用至回覆欄</button>
+
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-bold text-slate-600">陳情內容敘述 <span class="text-red-500">*</span></label>
+                            <textarea rows="6" class="w-full border border-slate-300 rounded-md p-3.5 focus:ring-2 focus:ring-teal-500 outline-none transition leading-relaxed text-slate-700">最近每天晚上八點過後，這附近的餐廳排出來的煙味真的很重，味道很刺鼻，讓我們都沒辦法開窗戶，已經發生好幾次了都沒有改善，請幫忙處理。</textarea>
                         </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
 
-              {activeTab === 'search' && (
-                <div className="p-5 flex flex-col h-full">
-                  <div className="bg-blue-600 p-3 rounded-lg text-white mb-4 shadow-sm">
-                    <p className="text-xs opacity-90 mb-1">環境部專屬知識庫 RAG 查詢</p>
-                    <div className="relative">
-                      <input 
-                        type="text" 
-                        placeholder="請輸入自然語言，如：油煙稽查規範..." 
-                        className="w-full p-2 pr-10 rounded text-sm text-[#333] outline-none"
-                        defaultValue="餐飲油煙排氣孔設置規範"
-                      />
-                      <Search className="absolute right-2 top-2 text-gray-400" size={18} />
+                        <div class="grid grid-cols-2 gap-8">
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-bold text-slate-600">污染類別 (AI 自動建議)</label>
+                                <select class="w-full border border-orange-200 bg-orange-50 rounded-md p-2.5 text-slate-700 outline-none">
+                                    <option>異味污染物</option>
+                                    <option>空氣污染</option>
+                                    <option>噪音</option>
+                                </select>
+                                <p class="text-[10px] text-orange-600 font-medium"><i class="fa-solid fa-robot mr-1"></i> AI 依內容判斷：異味污染物 (信心度 98%)</p>
+                            </div>
+                            <div class="space-y-1.5">
+                                <label class="text-sm font-bold text-slate-600">佐證附件</label>
+                                <div class="border-2 border-dashed border-slate-200 rounded-md p-4 text-center text-slate-400 hover:bg-slate-50 cursor-pointer transition">
+                                    <i class="fa-solid fa-paperclip mr-2"></i> 點擊上傳照片或影片 (支援 10MB 以內)
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                  </div>
 
-                  <div className="flex-1 space-y-4">
-                    <div className="bg-white border rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="text-green-500" size={16} />
-                        <span className="text-xs font-bold">AI 智慧答覆 (引自：空氣污染防制法)</span>
-                      </div>
-                      <p className="text-xs text-gray-600 leading-relaxed">
-                        根據《空氣污染防制法》第32條規定，餐飲業產生的油煙、異味不得未經處理直接排放，且排氣口設置高度應符合... (點擊展開全文)
-                      </p>
-                      <div className="mt-3 flex gap-2">
-                        <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500">#相關法令</span>
-                        <span className="text-[10px] bg-gray-100 px-2 py-1 rounded text-gray-500">#稽查SOP</span>
-                      </div>
+                    <div class="px-8 py-5 bg-slate-50 border-t border-slate-100 flex justify-end space-x-3">
+                        <button class="px-6 py-2 text-slate-500 hover:text-slate-700 font-medium">取消</button>
+                        <button class="px-6 py-2 bg-white border border-slate-300 text-slate-700 rounded-md shadow-sm hover:bg-slate-50 font-medium transition">暫存草稿</button>
+                        <button class="px-8 py-2 bg-[#007c89] text-white rounded-md shadow-md hover:bg-[#005d67] font-bold transition">確認受理並派案</button>
                     </div>
-                    
-                    <p className="text-[10px] text-gray-400 text-center uppercase tracking-widest py-2">歷史相似案件推薦</p>
-                    
-                    <div className="border-l-4 border-gray-200 pl-3 py-1 hover:bg-gray-50 cursor-pointer">
-                      <p className="text-xs font-bold text-gray-700">112年12月西屯區燒烤店案例</p>
-                      <p className="text-[10px] text-gray-500 mt-1">處理結果：勸導後加裝防制設備，民眾滿意度 5 顆星。</p>
-                    </div>
-                  </div>
                 </div>
-              )}
 
-              {activeTab === 'analysis' && (
-                <div className="p-5 flex flex-col items-center justify-center h-full text-center space-y-4">
-                  <BarChart3 size={48} className="text-gray-200" />
-                  <div>
-                    <p className="text-sm font-bold text-gray-700">智慧分析與熱點分布</p>
-                    <p className="text-xs text-gray-500 mt-2">此功能將整合全台 27 萬件數據，即時產生污染熱區圖。此版本僅供介面展示。</p>
-                  </div>
-                  <div className="w-full space-y-2">
-                     <div className="flex justify-between text-[10px] font-bold"><span>西屯區異味趨勢</span> <span className="text-red-500">+15%</span></div>
-                     <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                       <div className="h-full bg-red-400" style={{ width: '70%' }}></div>
-                     </div>
-                     <div className="flex justify-between text-[10px] font-bold"><span>噪音陳情量</span> <span className="text-green-500">-5%</span></div>
-                     <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                       <div className="h-full bg-green-400" style={{ width: '40%' }}></div>
-                     </div>
-                  </div>
+                <!-- 資安與稽核腳註 -->
+                <div class="mt-8 flex justify-between items-center text-[11px] text-slate-400">
+                    <div class="flex space-x-4">
+                        <span class="flex items-center"><i class="fa-solid fa-shield-halved mr-1.5"></i> TLS 1.3 已加密</span>
+                        <span class="flex items-center"><i class="fa-solid fa-fingerprint mr-1.5"></i> 操作軌跡已完整記錄</span>
+                    </div>
+                    <div class="bg-slate-200 px-2 py-0.5 rounded text-slate-500 font-mono">APP_ID: EMA-AI-v1.0</div>
                 </div>
-              )}
+            </div>
+        </main>
+
+        <!-- AI 智慧助手外掛側欄 -->
+        <aside class="ai-plugin-sidebar">
+            <!-- 側欄標題 -->
+            <div class="p-4 bg-slate-800 text-white flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center mr-3 ai-breathing">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <span class="font-bold tracking-wide">AI 智慧受理助手</span>
+                </div>
+                <button class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-gear"></i></button>
             </div>
 
-            {/* 頁尾 */}
-            <div className="p-3 border-t bg-gray-50 flex items-center justify-between">
-              <div className="flex items-center gap-1 text-[10px] text-gray-400">
-                <Info size={12} />
-                <span>逢甲大學 x 遠程科技 協作開發</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="p-1 hover:bg-gray-200 rounded transition-colors text-gray-500">
-                   <MessageSquare size={16} />
-                </button>
-              </div>
+            <!-- 頁籤切換 -->
+            <div class="flex border-b text-sm">
+                <button class="flex-1 py-3 font-bold border-b-2 border-teal-600 text-teal-700">受理輔助</button>
+                <button class="flex-1 py-3 font-bold text-slate-400 hover:bg-slate-50">知識 RAG</button>
+                <button class="flex-1 py-3 font-bold text-slate-400 hover:bg-slate-50">數據分析</button>
             </div>
-          </>
-        )}
-      </div>
 
-      {/* 底部資安標籤 (模擬簡報資安內容) */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 flex gap-4 pointer-events-none">
-        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs shadow-lg">
-          <ShieldCheck size={14} className="text-green-400" />
-          <span>動態個資去識別化已啟動 (Data Masking)</span>
-        </div>
-        <div className="flex items-center gap-2 bg-black/60 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs shadow-lg">
-          <ShieldCheck size={14} className="text-blue-400" />
-          <span>TLS 1.3 傳輸加密連線</span>
-        </div>
-      </div>
+            <!-- AI 核心內容區 -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-6">
+                
+                <!-- 1. 重複陳情警告 (向量比對技術) -->
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 shadow-sm">
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-amber-800 text-xs font-bold"><i class="fa-solid fa-triangle-exclamation mr-1.5"></i>偵測到疑似重複陳情</span>
+                        <span class="bg-amber-200 text-amber-900 text-[10px] px-1.5 py-0.5 rounded">相似度 94%</span>
+                    </div>
+                    <p class="text-[11px] text-amber-700 leading-relaxed">此地址於 2 小時內已有 2 筆關於「餐飲油煙」的報案，建議進行【併案處理】以節省派案資源。</p>
+                    <div class="mt-2 flex space-x-2">
+                        <button class="bg-amber-600 text-white text-[10px] px-3 py-1 rounded hover:bg-amber-700">查看關聯案</button>
+                        <button class="bg-white border border-amber-300 text-amber-700 text-[10px] px-3 py-1 rounded">忽略提示</button>
+                    </div>
+                </div>
+
+                <!-- 2. AI 色階分級管理 (CCS 風格) -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">案件處理優先權評估</h4>
+                    <div class="priority-level priority-medium">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-bold">優先級：中風險 (橙色)</span>
+                            <span class="text-xs font-mono">SCORE: 72</span>
+                        </div>
+                        <div class="w-full bg-white/60 h-2 rounded-full overflow-hidden">
+                            <div class="bg-orange-500 h-full w-[72%] shadow-[0_0_8px_rgba(249,115,22,0.5)]"></div>
+                        </div>
+                        <p class="text-[10px] mt-2 opacity-80 leading-relaxed">判斷基準：感官型污染、發生頻繁、鄰近住宅區、夜間好發。建議派發至「環境管理署北區中心」。</p>
+                    </div>
+                </div>
+
+                <!-- 3. 智慧補問腳本 (NLP 意圖分析) -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">智慧引導補問建議</h4>
+                        <span class="bg-teal-50 text-teal-700 text-[9px] px-2 py-0.5 rounded border border-teal-100">SOP 自動匹配</span>
+                    </div>
+                    <div class="smart-script-card space-y-3">
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
+                            <p class="text-xs text-slate-600">Q: 是否能具體描述味道？(例如：<span class="highlight-prompt">燒焦味</span>、<span class="highlight-prompt">酸臭味</span>、<span class="highlight-prompt">油漆味</span>)</p>
+                        </div>
+                        <div class="flex items-start space-x-3 bg-teal-50/50 p-2 rounded">
+                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
+                            <p class="text-xs text-slate-800 font-medium italic">Q: 是否有觀察到明顯的黑煙或煙囪排放？</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <input type="checkbox" class="mt-1 w-3.5 h-3.5 accent-teal-600">
+                            <p class="text-xs text-slate-600 line-through">Q: 發生的大約時間點？(民眾已敘述)</p>
+                        </div>
+                        <button class="w-full py-2 bg-slate-700 text-white text-xs rounded hover:bg-slate-800 transition font-bold shadow-sm">
+                            <i class="fa-solid fa-i-cursor mr-2"></i> 一鍵帶入補問清單
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 4. 法規知識 RAG 摘要 -->
+                <div class="space-y-3">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-tighter">相關法規與回覆範本 (RAG)</h4>
+                    <div class="space-y-2.5">
+                        <div class="p-2.5 border border-slate-200 rounded-md hover:border-teal-400 cursor-pointer transition group">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold text-teal-600 group-hover:text-teal-700">《空污法》第 32 條第 1 項</span>
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[8px] text-slate-300"></i>
+                            </div>
+                            <p class="text-[11px] text-slate-500 leading-snug line-clamp-2">從事烹飪甚至散發油煙或惡臭者，應設置防制設施並維持正常操作，不得有散布油煙...</p>
+                        </div>
+                        <div class="p-2.5 border border-slate-200 rounded-md hover:border-teal-400 cursor-pointer transition group border-l-4 border-l-teal-600 bg-slate-50">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-[10px] font-bold text-slate-700">推薦回覆文字草稿 (親民版)</span>
+                                <span class="text-[9px] bg-white border px-1 rounded">一鍵複製</span>
+                            </div>
+                            <p class="text-[11px] text-slate-600 italic leading-snug">「感謝您的反映，本局已錄案辦理，將儘速派員前往該餐廳進行油煙防制設備檢查及氣味偵測...」</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- AI 助手對話輸入框 -->
+            <div class="p-4 bg-white border-t border-slate-100 shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
+                <div class="relative">
+                    <input type="text" class="w-full bg-slate-100 border border-slate-200 rounded-full py-2.5 px-5 pr-12 text-xs focus:ring-2 focus:ring-teal-500 outline-none transition" placeholder="輸入指令 (例如：找出該區域近三個月處分統計)">
+                    <button class="absolute right-3 top-2.5 text-teal-600 hover:text-teal-800 transition">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </div>
+                <div class="mt-2.5 flex justify-center items-center">
+                    <div class="h-[1px] w-10 bg-slate-200"></div>
+                    <span class="mx-3 text-[10px] text-slate-400 font-medium">Gemini 2.5 Flash Engine Enabled</span>
+                    <div class="h-[1px] w-10 bg-slate-200"></div>
+                </div>
+            </div>
+        </aside>
     </div>
-  );
-};
 
-export default App;
+    <!-- AI 動態懸浮按鈕 (外掛切換開關) -->
+    <div class="fixed bottom-8 right-[400px] ai-breathing bg-[#007c89] text-white w-14 h-14 rounded-full flex items-center justify-center shadow-xl cursor-pointer hover:scale-110 active:scale-95 transition-all duration-300 z-50">
+        <i class="fa-solid fa-robot text-2xl"></i>
+    </div>
+
+    <!-- 頁面浮水印 -->
+    <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 -rotate-45 pointer-events-none opacity-[0.03] text-slate-900 text-9xl font-black whitespace-nowrap">
+        MOE INTERNAL ONLY
+    </div>
+
+</body>
+</html>
